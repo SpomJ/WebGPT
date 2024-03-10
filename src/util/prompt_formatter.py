@@ -1,7 +1,7 @@
 ROLE_TOKEN = {
     'system': '@[SYS]',
     'user': '@[USR]',
-    'assistant': '@[WEB]',
+    'web': '@[WEB]',
     'bot': '@[BOT]'
 }
 S_END = '@[END]'
