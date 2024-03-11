@@ -6,10 +6,13 @@ ROLE_TOKEN = {
 }
 S_END = '@[END]'
 
-def fmt(msgs: list):
-    O = ''
-    for msg in msgs:
-      O += ROLE_TOKEN[msg['role']]
-      O += msg['content']
-      O += S_END
+def bulk_fmt(dataset: 'Dataset dict in form of {id: [1,2,...], messages: [[{...}, {...}], [...]]}'):
+    O = []
+    for chain in dataset['messages']:
+        c = ''
+        for msg in chain:
+            c += ROLE_TOKEN[msg['role']]
+            c += msg['content']
+            c += S_END
+        O.append(c)
     return O
