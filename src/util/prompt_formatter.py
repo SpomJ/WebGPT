@@ -16,3 +16,8 @@ def bulk_fmt(dataset: 'Dataset dict in form of {id: [1,2,...], messages: [[{...}
             c += S_END
         O.append(c)
     return O
+
+
+def fmt_user_input(s):
+    return ROLE_TOKEN['user'] + s + S_END
+   
