@@ -1,5 +1,6 @@
+from datasets import load_dataset
 from trl import SFTTrainer
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 
 ROLE_TOKENS = {
     'system': '[!]',
@@ -26,9 +27,9 @@ class Model:
         '''
         c = ''
         for msg in chain:
-            c += ROLE_TOKEN[msg['role']]
+            c += ROLE_TOKENS[msg['role']]
             c += msg['content']
-            c += S_END
+            c += TOKENS['eos_token']
         return c
 
 #    def rev_fmt(self, tokens):
@@ -46,28 +47,31 @@ class Model:
 #                msgs.append({'role': role,  
 
 class Trainer(Model):
-    def __init__(self, dataset_paths, model, train_args={}, seq_len=512):
+    def __init__(self, dataset_paths, model, train_args={}, seq_len=512, use_gpu=True):
+        self.tokenizer = AutoTokenizer.from_pretrained(model)
+
         if type(model) == str:
             model = AutoModelForCausalLM.from_pretrained(model)
 
         self.train_args = train_args
         self.dataset_paths = dataset_paths
-        self.seq_len
+        self.seq_len = seq_len
         self.model = model
         self.dataset = load_dataset('json', data_files=dataset_paths, split='train')
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.tokenizer.add_special_tokens({**TOKENS, 'additional_special_tokens': list(ROLE_TOKENS.values())})
-        self.model.resize_token_embeddings(len(tokenizer))
+        self.model.resize_token_embeddings(len(self.tokenizer))
+        if use_gpu:
+            self.to_gpu()
         
-    @staticmethod
-    def bulk_fmt(dataset):
+    @classmethod
+    def bulk_fmt(self, dataset):
         '''
         Formats message chains from given dataset into strings.
         Returns list of said strings.
             dataset: Dataset in form of {"id": [0, 1, 2, ...], "messages": [[{"role": x, "content": x}, ...], ...]}
         '''
         O = []
-        for chain in ds['messages']:
+        for chain in dataset['messages']:
             O.append(self.fmt(chain))
         return O
 
@@ -92,6 +96,9 @@ class Trainer(Model):
             args =            TrainingArguments(**{**self.train_args, **cust_args})  # {**a, **b} <=> a.update(b), but not in-place
         ).train()
 
+    def to_gpu(self):
+        self.model = self.model.to("cuda")
+        self.tokenizer  = self.tokenier.to("cuda")
 
             
 
