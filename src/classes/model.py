@@ -1,5 +1,5 @@
 from trl import SFTTrainer
-from ransformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 ROLE_TOKENS = {
     'system': '[!]',
