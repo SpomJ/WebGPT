@@ -61,7 +61,7 @@ class Trainer(Model):
         self.tokenizer.add_special_tokens({**TOKENS, 'additional_special_tokens': list(ROLE_TOKENS.values())})
         self.model.resize_token_embeddings(len(self.tokenizer))
         if use_gpu:
-            self.to_gpu()
+            self.model = self.model.to('cuda')
         
     @classmethod
     def bulk_fmt(self, dataset):
@@ -95,10 +95,6 @@ class Trainer(Model):
             max_seq_length =  self.seq_len,
             args =            TrainingArguments(**{**self.train_args, **cust_args})  # {**a, **b} <=> a.update(b), but not in-place
         ).train()
-
-    def to_gpu(self):
-        self.model = self.model.to("cuda")
-        self.tokenizer  = self.tokenier.to("cuda")
 
             
 
