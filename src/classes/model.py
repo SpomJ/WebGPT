@@ -1,5 +1,5 @@
 from trl import SFTTrainer
-from Transformers import AutoTokenizer, AutoModelForCasualLM
+from ransformers import AutoTokenizer, AutoModelForCausalLM
 
 ROLE_TOKENS = {
     'system': '[!]',
@@ -13,11 +13,42 @@ TOKENS = {
     'pad_token': '[_]'
 }
 
+class Model:
+    def __init__(model):
+        self.model = model
+        self.tokenizer = AutoTokenizer.from_pretrained(model)
+
+    @staticmethod
+    def fmt(chain):
+        '''
+        Format the given chain into a string.
+            chain: message chain in form of [{'role': '', 'content': ''}, ...]
+        '''
+        c = ''
+        for msg in chain:
+            c += ROLE_TOKEN[msg['role']]
+            c += msg['content']
+            c += S_END
+        return c
+
+#    def rev_fmt(self, tokens):
+#        '''
+#        Split string into a message chain in form of [{'role': '', 'content': ''}, ...]
+#            tokens: String
+#        '''
+#        reverse_roles = dict().from
+#        msgs = []
+#        start = 0
+#        token_sep = self.tokenizer(TOKENS['eos_token'])[0]
+#        
+#        for i in range(len(tokens)):
+#            if tokens[i] == token_sep:
+#                msgs.append({'role': role,  
 
 class Trainer(Model):
     def __init__(self, dataset_paths, model, train_args={}, seq_len=512):
         if type(model) == str:
-            model = AutoModelForCasualLM.from_pretrained(model)
+            model = AutoModelForCausalLM.from_pretrained(model)
 
         self.train_args = train_args
         self.dataset_paths = dataset_paths
@@ -62,36 +93,5 @@ class Trainer(Model):
         ).train()
 
 
-class Model:
-    def __init__(model):
-        self.model = model
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
-
-    @staticmethod
-    def fmt(chain):
-        '''
-        Format the given chain into a string.
-            chain: message chain in form of [{'role': '', 'content': ''}, ...]
-        '''
-        c = ''
-        for msg in chain:
-            c += ROLE_TOKEN[msg['role']]
-            c += msg['content']
-            c += S_END
-        return c
-
-#    def rev_fmt(self, tokens):
-#        '''
-#        Split string into a message chain in form of [{'role': '', 'content': ''}, ...]
-#            tokens: String
-#        '''
-#        reverse_roles = dict().from
-#        msgs = []
-#        start = 0
-#        token_sep = self.tokenizer(TOKENS['eos_token'])[0]
-#        
-#        for i in range(len(tokens)):
-#            if tokens[i] == token_sep:
-#                msgs.append({'role': role,  
             
 
