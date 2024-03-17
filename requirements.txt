@@ -1,7 +1,7 @@
 torch
 pyTelegramBotAPI
 transformers
-googlesearch
+googlesearch-python
 html2text
 urllib
 bs4
