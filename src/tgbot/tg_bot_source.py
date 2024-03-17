@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # -*- coding: utf-8 -*-
 """Untitled12.ipynb
 
@@ -20,12 +22,16 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import telebot
 
+import sys
 
+
+
+MODEL_PATH = sys.argv[1]
 bot = telebot.TeleBot("6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo")
 
-alia = AutoModelForCausalLM.from_pretrained("/content/drive/MyDrive/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000").to('cuda')
+alia = AutoModelForCausalLM.from_pretrained(MODEL_PATH.to('cuda')
 
-alia_tokenizer = AutoTokenizer.from_pretrained("/content/drive/MyDrive/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000", device="cuda:0")
+alia_tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, device="cuda:0")
 
 
 ROLE_TOKEN = {
@@ -62,7 +68,6 @@ def find_answer(question):
 
 
 def google_ans(url):
-
   search_results = googlesearch.search(url, num=1, stop=1)
   if search_results:
     website_url = next(search_results)
