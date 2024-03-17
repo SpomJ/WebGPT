@@ -54,11 +54,14 @@ class Model:
         )[0]
 
 class Trainer(Model):
-    def __init__(self, dataset_paths, model, train_args={}, seq_len=512, use_gpu=True):
+    def __init__(self, dataset_paths, model, train_args={}, seq_len=512, use_gpu=True, lora_config=None):
         self.tokenizer = AutoTokenizer.from_pretrained(model)
 
         if type(model) == str:
-            model = AutoModelForCausalLM.from_pretrained(model)
+            if lora_config:
+                model = AutoModelForCausalLMWithValueHead.from_pretrained(model, peft_config=lora_config)
+            else:
+            	model = AutoModelForCausalLM.from_pretrained(model)
 
         self.train_args = train_args
         self.dataset_paths = dataset_paths
