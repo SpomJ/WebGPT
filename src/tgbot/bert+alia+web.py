@@ -7,7 +7,9 @@ Original file is located at
     https://colab.research.google.com/drive/1ptBT0UML1P14Pe2l8EHeU7t10HO6c-hx
 """
 
-!pip install html2text pyTelegramBotAPI
+
+
+# !pip install html2text pyTelegramBotAPI
 from transformers import BertTokenizer, BertForQuestionAnswering, AutoTokenizer, AutoModelForCausalLM
 import torch
 import googlesearch
@@ -16,11 +18,12 @@ import html2text
 import telebot
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+import telebot
 
 
 bot = telebot.TeleBot("6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo")
 
-alia = AutoModelForCausalLM.from_pretrained("/content/drive/MyDrive/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000")
+alia = AutoModelForCausalLM.from_pretrained("/content/drive/MyDrive/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000").to('cuda')
 
 alia_tokenizer = AutoTokenizer.from_pretrained("/content/drive/MyDrive/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000", device="cuda:0")
 
@@ -36,8 +39,14 @@ S_PAD = '[_]'
 
 # print(text)
 
-tokenizer = BertTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad")
-model = BertForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad")
+tokenizer = BertTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad", device="cuda:0")
+model = BertForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad").to('cuda')
+
+
+BOT_TOKEN = "6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo"
+
+# Initialize Telebot
+bot = telebot.TeleBot(BOT_TOKEN)
 
 def find_answer(question):
     # Use Google to search for a URL related to the question
@@ -54,7 +63,7 @@ def find_answer(question):
 
 def google_ans(url):
 
-  search_results = googlesearch.search(question, num=1, stop=1)
+  search_results = googlesearch.search(url, num=1, stop=1)
   if search_results:
     website_url = next(search_results)
     url = website_url
@@ -85,6 +94,8 @@ def split_text(text, max_segment_length):
             current_segment = paragraph + "\n"
     if current_segment:  # Add the last segment
         segments.append(current_segment.strip())
+
+    print(segments)
     return segments
 
 # Load tokenizer and model
@@ -105,7 +116,7 @@ def get_all_res (question):
   best_end_score = -float('inf')
 
   for i, segment in enumerate(text_segments):
-      inputs = tokenizer(question, segment, return_tensors="pt", truncation=True, max_length=512, padding="max_length")
+      inputs = tokenizer(question, segment, return_tensors="pt", truncation=True, max_length=512, padding="max_length").to('cuda')
       with torch.no_grad():
           outputs = model(**inputs)
 
@@ -122,23 +133,38 @@ def get_all_res (question):
           best_start_score = aes
           best_end_score = es
           best_answer = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(inputs["input_ids"][0][answer_start:answer_end]))
-
+          print(best_answer)
   input_text = f"{question}[/][WEB]{best_answer}[/][BOT]"
-  input_ids = alia_tokenizer(input_text, return_tensors="pt")
+  input_ids = alia_tokenizer(input_text, return_tensors="pt").to('cuda')
 
 
   alia_outputs = alia.generate(**input_ids, max_length = 512, repetition_penalty = 10., encoder_repetition_penalty = 10., eos_token_id = alia_tokenizer(S_END)['input_ids'][0])
   yt = alia_tokenizer.decode(alia_outputs[0])
 
+  print(yt[(yt.index('[BOT]') + 5):-3])
 
   return yt[(yt.index('[BOT]') + 5):-3]
 
-  print(yt[(yt.index('[BOT]') + 5):-3])
+  # print(yt[(yt.index('[BOT]') + 5):-3])
 
 
-print(get_all_res("Who is Elon Musk?"))
+# print(get_all_res("who is Elon Musk"))
+
+
+
+@bot.message_handler(func=lambda message: True)
+def echo_all(message):
+    question = message.text
+    rply = get_all_res(question)
+    bot.reply_to(message, rply)
+
+
+bot.polling()
+
+
 
 # Print the best answer found
 # print("Best Answer:", best_answer)
 # print("Start Score:", best_start_score)
 # print("End Score:", best_end_score)
+
