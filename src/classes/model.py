@@ -34,8 +34,8 @@ class Model:
 
 #    def rev_fmt(self, tokens):
 #        '''
-#        Split string into a message chain in form of [{'role': '', 'content': ''}, ...]
-#            tokens: String
+#        Split token sequence into a message chain in form of [{'role': '', 'content': ''}, ...]
+#            tokens: list[str]
 #        '''
 #        reverse_roles = dict().from
 #        msgs = []
@@ -44,7 +44,14 @@ class Model:
 #        
 #        for i in range(len(tokens)):
 #            if tokens[i] == token_sep:
-#                msgs.append({'role': role,  
+#                msgs.append({'role': role,
+
+    def str_response(s):
+        return self.tokenizer.decode(
+            self.model.generate(
+                **tokenizer(s, return_tensors='pt')
+            )
+        )[0]
 
 class Trainer(Model):
     def __init__(self, dataset_paths, model, train_args={}, seq_len=512, use_gpu=True):
