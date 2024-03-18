@@ -47,10 +47,15 @@ class Model:
 #                msgs.append({'role': role,
 
     def str_response(s):
+        p = self.tokenizer(s)
         return self.tokenizer.decode(
             self.model.generate(
-                **tokenizer(s, return_tensors='pt')
-            )
+                **self.tokenizer(s, return_tensors='pt'),
+                max_length=seq_len,
+                repetition_penalty=10.,
+                encoder_repetition_penalty=10.,
+                eos_token_id=self.tokenizer(TOKENS['eos_token']['input_ids'][0])
+            )['input_ids'][len(p['input_ids']):]
         )[0]
 
 class Trainer(Model):
