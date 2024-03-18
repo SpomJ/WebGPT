@@ -72,7 +72,7 @@ def results(question):
             # print(best_answer)
             anss.append(best_answer)
 
-    return = '; '.join(anss)
+    return '; '.join(anss)
 
 
 def respond(hist, q):
