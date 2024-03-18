@@ -1,42 +1,21 @@
-# !pip install html2text pyTelegramBotAPI
 from transformers import BertTokenizer, BertForQuestionAnswering, AutoTokenizer, AutoModelForCausalLM
 import torch
-import googlesearch
-import requests
-import html2text
-import telebot
-from urllib.request import urlopen
-from bs4 import BeautifulSoup
 import telebot
 from web import *
 from model import *
 from duckduckgo_search import DDGS
 
 MODEL_PATH = ''
+BOT_TOKEN = "6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo"
+HIST_CLEAR = '/empty'
 
 model = Model(MODEL_PATH)
-
-# print(text)
 
 bert = Model("bert-large-uncased-whole-word-masking-finetuned-squad")
 bert.model = BertTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad", device="cuda:0")
 bert.tokenizer = BertForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad").to('cuda')
 
-BOT_TOKEN = "6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo"
-
-# Initialize Telebot
 bot = telebot.TeleBot(BOT_TOKEN)
-
-
-# def find_answer(question):
-#     # Use Google to search for a URL related to the question
-#     search_results = googlesearch.search(question, num=1, stop=1)
-
-#     if search_results:
-#         website_url = next(search_results)
-#         print("Found website URL:", website_url)
-
-#         text = get_text(website_url)
 
 
 def split_text(text, max_segment_length):
@@ -53,14 +32,6 @@ def split_text(text, max_segment_length):
 
     print(segments)
     return segments
-
-
-# Load tokenizer and model
-
-
-# Example text
-# text = f"""google_ans{question}
-# """
 
 
 def results(question):
@@ -103,6 +74,7 @@ def results(question):
 
     return = '; '.join(anss)
 
+
 def respond(hist, q):
     hist = hist + [
         {'role': 'user', 'content': q},
@@ -110,24 +82,18 @@ def respond(hist, q):
     input_text = Model.fmt(hist)
     output = model.str_response(text)
 
-    return output
-
-    # print(yt[(yt.index('[BOT]') + 5):-3])
+    return hist, output
 
 
-# print(get_all_res("who is Elon Musk"))
-
+hist = []
 
 @bot.message_handler(func=lambda x: 1)
 def echo_all(message):
     question = message.text
-    rply = respond(question)
+    if message.text == HIST_CLEAR: hist = []; return
+    hist, rply = respond(hist, question)
     bot.reply_to(message, rply)
 
 print('ready')
 bot.infinity_polling()
 
-# Print the best answer found
-# print("Best Answer:", best_answer)
-# print("Start Score:", best_start_score)
-# print("End Score:", best_end_score)
