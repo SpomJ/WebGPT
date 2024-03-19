@@ -121,7 +121,7 @@ def echo_all(message):
     question = message.text
     print(message.text)
     rply = respond(question)
-    bot.reply_to(message, rply)
+    bot.send_message(message.chat.id, rply)
 
 
 print('ready')
