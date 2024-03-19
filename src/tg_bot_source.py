@@ -7,22 +7,27 @@ from duckduckgo_search import DDGS
 
 import os
 from pathlib import Path
+
 # pth = os.path.abspath('Downloads/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000')
 
 model_id = "facebook/opt-1.3b"
 
 ADAPTER_PATH = Path(r"C:\Users\Sirius\Downloads\model-1\checkpoint-1400")
 BOT_TOKEN = "6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo"
-HIST_CLEAR = '/empty'
+# HIST_CLEAR = '/empty'
 
 model = Model(model_id, adapter=ADAPTER_PATH)
+
 
 # bert = Model("bert-large-uncased-whole-word-masking-finetuned-squad")
 class A:
     pass
+
+
 bert = A()
 bert.tokenizer = BertTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad", device="cuda:0")
-bert.model = BertForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad").to('cuda')
+bert.model = BertForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad").to(
+    'cuda')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -42,12 +47,13 @@ def split_text(text, max_segment_length):
     print(*map(lambda x: x.replace('\\n', ''), segments), sep='\n\n')
     return segments
 
+
 def st2(text, max_segment_length):
     i = max_segment_length
     o = []
     while i < len(text):
         o.append(text[i - max_segment_length:i])
-        i += max_segment_length//2
+        i += max_segment_length // 2
     o.append(text[-max_segment_length:])
     return o
 
@@ -105,16 +111,20 @@ def respond(hist, q):
 hist = []
 
 
+@bot.message_handler(commands=['clear'])
+def clean_history(message):
+    global hist
+    hist = []
+    bot.reply_to(message, "History clear!")
+    return
+
+
 @bot.message_handler(func=lambda x: 1)
 def echo_all(message):
     global hist
     question = message.text
     print(message.text)
-    print(hist)
-    if message.text == HIST_CLEAR:
-        hist = []
-        bot.reply_to(message, "History clear!")
-        return
+
     hist, rply = respond(hist, question)
     bot.reply_to(message, rply)
 
