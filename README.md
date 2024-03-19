@@ -13,7 +13,11 @@ pip install -r requirements.txt
 ### Usage:
 
 ```sh
-python3 src/tgbot/telegabot.py
+python src/tg_bot_source.py
 ```
 
-Open telegram and go to `@WebGPTboBOT`, write `/start` and enter your prompt.
+
+Open telegram, go to `@WebGPTboBOT` and enter your prompt.
+
+
+# Profit 1!!
