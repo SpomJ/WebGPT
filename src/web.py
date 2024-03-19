@@ -10,12 +10,12 @@ def search_qtext(q):
     except IndexError:
         return None
 
-def search_url(q):
+def search_url(q, n=1):
     try:
-        return googlesearch.search(q, num_results=1).next()
+        return list(googlesearch.search(q, num_results=n))
     except Exception:
         try:
-            return DDGS().text(q, max_results=1)[0]['href']
+            return list(map(lambda x: x['href'], DDGS().text(q, max_results=n)))
         except Exception:
             return None
 
@@ -26,15 +26,16 @@ def get_page(url):
 def parse_html(html):
     return HTML2Text().handle(html)
 
-def search_full(q):
-    try:
-        u = search_url(q)
-        # print(u)
-        p = get_page(u)
-        # print(p[:50])
-        h = parse_html(p)
-        return h
-    except:
-        return
-
+def search_full(q, n=1):
+    urls = search_url(q, n)
+    print(urls)
+    texts = []
+    for url in urls:
+        try:
+            p = get_page(url)
+            texts.append(parse_html(p))
+        except Exception:
+            pass
+    print(texts)
+    return texts
 

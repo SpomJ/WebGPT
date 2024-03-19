@@ -70,10 +70,12 @@ class Model:
         output = self.model.generate(
             **input_ids,
             max_length=512,
+            num_beams=5,
+            do_sample=True,
             repetition_penalty=10.,
             encoder_repetition_penalty=10.,
-            eos_token_id=self.tokenizer(TOKENS['eos_token'])['input_ids'][0])
-        return self.tokenizer.decode(output[0][len(p['input_ids']):])
+            eos_token_id=self.tokenizer.eos_token_id)
+        return self.tokenizer.decode(output[0][len(p['input_ids']):-1])
 
 class Trainer(Model):
     def __init__(self, dataset_paths, model, train_args={}, seq_len=512, use_gpu=True, lora_config=None):

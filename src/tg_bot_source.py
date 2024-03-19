@@ -12,7 +12,7 @@ from pathlib import Path
 
 model_id = "facebook/opt-1.3b"
 
-ADAPTER_PATH = Path(r"C:\Users\Sirius\Downloads\model-1\checkpoint-1400")
+ADAPTER_PATH = "/home/user1/model-1/checkpoint-1500"
 BOT_TOKEN = "6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo"
 # HIST_CLEAR = '/empty'
 
@@ -58,9 +58,7 @@ def st2(text, max_segment_length):
     return o
 
 
-def results(question):
-    text = search_full(question)
-    if not text: text = ''
+def bert_parse(text, question):
     max_segment_length = 512  # Maximum input length for BERT
     text_segments = st2(text, max_segment_length)
     # print(text_segments)
@@ -95,37 +93,34 @@ def results(question):
             anss.append(best_answer.replace('[PAD]', '').replace('[CLS]', ''))
 
     print(anss)
-    return '; '.join(anss)
+    return '; '.join(filter(bool, anss))
 
+def results(q):
+    texts = search_full(q, n=2)
+    out = []
+    for text in texts:
+        out.append(bert_parse(text, q))
+    print(out)
+    return '\n'.join(filter(bool, out))
 
-def respond(hist, q):
-    hist = hist + [
-        {'role': 'user', 'content': q},
-        {'role': 'web', 'content': results(q)}]
-    input_text = Model.fmt(hist)
+def respond(q):
+    o = results(q)
+    print(f'I1: {o}')
+#    o = bert_parse(o, q)
+#    print(f'I2: {o}')
+    hist = [{'role': 'user', 'content': q},
+            {'role': 'web', 'content': o}]
+    input_text = Model.fmt(hist) + ROLE_TOKENS['bot']
     print(input_text)
     output = model.str_response(input_text)
-    return hist, output
-
-
-hist = []
-
-
-@bot.message_handler(commands=['clear'])
-def clean_history(message):
-    global hist
-    hist = []
-    bot.reply_to(message, "History clear!")
-    return
+    return output
 
 
 @bot.message_handler(func=lambda x: 1)
 def echo_all(message):
-    global hist
     question = message.text
     print(message.text)
-
-    hist, rply = respond(hist, question)
+    rply = respond(question)
     bot.reply_to(message, rply)
 
 
