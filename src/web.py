@@ -13,20 +13,28 @@ def search_qtext(q):
 def search_url(q):
     try:
         return googlesearch.search(q, num_results=1).next()
-    except requests.exceptions.HTTPError:
+    except Exception:
         try:
             return DDGS().text(q, max_results=1)[0]['href']
-        except IndexError:
+        except Exception:
             return None
 
+
 def get_page(url):
-    return requests.get(url).text
+    return requests.get(url, timeout=15).text
 
 def parse_html(html):
-    return HTML2Text().html2text(html)
+    return HTML2Text().handle(html)
 
 def search_full(q):
     try:
-    	return parse_html(get_page(search_url(q)))
+        u = search_url(q)
+        # print(u)
+        p = get_page(u)
+        # print(p[:50])
+        h = parse_html(p)
+        return h
+    except:
+        return
 
 

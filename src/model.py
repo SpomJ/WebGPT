@@ -1,12 +1,19 @@
 from datasets import load_dataset
 from trl import SFTTrainer
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
+import pathlib
 
+# ROLE_TOKENS = {
+#     'system': '[!]',
+#     'user':   '[>]',
+#     'web':    '[?]',
+#     'bot':    '[<]'
+# }
 ROLE_TOKENS = {
-    'system': '[!]',
-    'user':   '[>]',
-    'web':    '[?]',
-    'bot':    '[<]'
+    'system': '[SYS]',
+    'user':   '[USR]',
+    'web':    '[WEB]',
+    'bot':    '[BOT]'
 }
 
 TOKENS = {
@@ -15,9 +22,16 @@ TOKENS = {
 }
 
 class Model:
-    def __init__(model):
+    def __init__(self, model, seq_len=512, use_gpu=1):
+        # if type(model) in [str, pathlib.Path]:
+        self.tokenizer = AutoTokenizer.from_pretrained(model, device='cuda:0' if use_gpu else 'cpu')
         self.model = model
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
+        # if type(self.model) in [str, pathlib.WindowsPath]:
+        self.model = AutoModelForCausalLM.from_pretrained(model)
+        self.seq_len = seq_len
+        self.use_gpu = use_gpu
+        if use_gpu:
+            self.model = self.model.to('cuda')
 
     @staticmethod
     def fmt(chain):
@@ -46,17 +60,16 @@ class Model:
 #            if tokens[i] == token_sep:
 #                msgs.append({'role': role,
 
-    def str_response(s):
+    def str_response(self, s):
         p = self.tokenizer(s)
-        return self.tokenizer.decode(
-            self.model.generate(
-                **self.tokenizer(s, return_tensors='pt'),
-                max_length=seq_len,
-                repetition_penalty=10.,
-                encoder_repetition_penalty=10.,
-                eos_token_id=self.tokenizer(TOKENS['eos_token']['input_ids'][0])
-            )['input_ids'][len(p['input_ids']):]
-        )[0]
+        input_ids = self.tokenizer(s, return_tensors="pt").to('cuda')
+        output = self.model.generate(
+            **input_ids,
+            max_length=512,
+            repetition_penalty=10.,
+            encoder_repetition_penalty=10.,
+            eos_token_id=self.tokenizer(TOKENS['eos_token'])['input_ids'][0])
+        return self.tokenizer.decode(output[0][len(p['input_ids']):])
 
 class Trainer(Model):
     def __init__(self, dataset_paths, model, train_args={}, seq_len=512, use_gpu=True, lora_config=None):

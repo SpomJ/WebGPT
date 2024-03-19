@@ -5,15 +5,23 @@ from web import *
 from model import *
 from duckduckgo_search import DDGS
 
-MODEL_PATH = ''
+import os
+from pathlib import Path
+# pth = os.path.abspath('Downloads/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000')
+
+MODEL_PATH = Path(r"C:\Users\Sirius\Downloads\checkpoint-79000\content\drive\MyDrive\gpt-oasst\checkpoint-79000")
 BOT_TOKEN = "6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo"
 HIST_CLEAR = '/empty'
 
-model = Model(MODEL_PATH)
+model = Model(MODEL_PATH, use_gpu=1)
+print(type(model.model))
 
-bert = Model("bert-large-uncased-whole-word-masking-finetuned-squad")
-bert.model = BertTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad", device="cuda:0")
-bert.tokenizer = BertForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad").to('cuda')
+# bert = Model("bert-large-uncased-whole-word-masking-finetuned-squad")
+class A:
+    pass
+bert = A()
+bert.tokenizer = BertTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad", device="cuda:0")
+bert.model = BertForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad").to('cuda')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -21,7 +29,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 def split_text(text, max_segment_length):
     segments = []
     current_segment = ""
-    for paragraph in text.split("\n"):  # Split by paragraphs for simplicity
+    for paragraph in text.split("\\n"):  # Split by paragraphs for simplicity
         if len(current_segment) + len(paragraph) < max_segment_length:
             current_segment += paragraph + "\n"
         else:
@@ -30,28 +38,34 @@ def split_text(text, max_segment_length):
     if current_segment:  # Add the last segment
         segments.append(current_segment.strip())
 
-    print(segments)
+    print(*map(lambda x: x.replace('\\n', ''), segments), sep='\n\n')
     return segments
+
+def st2(text, max_segment_length):
+    i = max_segment_length
+    o = []
+    while i < len(text):
+        o.append(text[i - max_segment_length:i])
+        i += max_segment_length//2
+    o.append(text[-max_segment_length:])
+    return o
 
 
 def results(question):
     text = search_full(question)
+    if not text: text = ''
     max_segment_length = 512  # Maximum input length for BERT
-    text_segments = split_text(text, max_segment_length//2)
+    text_segments = st2(text, max_segment_length)
+    # print(text_segments)
     best_answer = ""  # Initialize variables to store the best answer and its scores
     best_start_score = -float('inf')
     best_end_score = -float('inf')
     anss = []
 
     for i, segment in enumerate(text_segments):
-        inputs = tokenizer(
-            question,
-            segment,
-            return_tensors="pt",
-            truncation=True,
-            max_length=512,
-            padding="max_length").to('cuda')
-        
+        inputs = bert.tokenizer(question, segment, return_tensors="pt", truncation=True, max_length=512,
+                                padding="max_length").to('cuda')
+
         with torch.no_grad():
             outputs = bert.model(**inputs)
 
@@ -67,11 +81,13 @@ def results(question):
         if aes > best_start_score and es > best_end_score:
             best_start_score = aes
             best_end_score = es
-            best_answer = tokenizer.convert_tokens_to_string(
-                tokenizer.decode(inputs["input_ids"][0][answer_start:answer_end]))
+            best_answer = bert.tokenizer.convert_tokens_to_string(
+                bert.tokenizer.convert_ids_to_tokens(inputs["input_ids"][0][answer_start:answer_end]))
             # print(best_answer)
-            anss.append(best_answer)
+            if '[SEP]' in best_answer: best_answer = ''
+            anss.append(best_answer.replace('[PAD]', '').replace('[CLS]', ''))
 
+    print(anss)
     return '; '.join(anss)
 
 
@@ -80,20 +96,27 @@ def respond(hist, q):
         {'role': 'user', 'content': q},
         {'role': 'web', 'content': results(q)}]
     input_text = Model.fmt(hist)
-    output = model.str_response(text)
-
+    print(input_text)
+    output = model.str_response(input_text)
     return hist, output
 
 
 hist = []
 
+
 @bot.message_handler(func=lambda x: 1)
 def echo_all(message):
+    global hist
     question = message.text
-    if message.text == HIST_CLEAR: hist = []; return
+    print(message.text)
+    print(hist)
+    if message.text == HIST_CLEAR:
+        hist = []
+        bot.reply_to(message, "History clear!")
+        return
     hist, rply = respond(hist, question)
     bot.reply_to(message, rply)
 
+
 print('ready')
 bot.infinity_polling()
-
