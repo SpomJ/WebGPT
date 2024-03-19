@@ -9,12 +9,13 @@ import os
 from pathlib import Path
 # pth = os.path.abspath('Downloads/checkpoint-79000/content/drive/MyDrive/gpt-oasst/checkpoint-79000')
 
-MODEL_PATH = Path(r"C:\Users\Sirius\Downloads\checkpoint-79000\content\drive\MyDrive\gpt-oasst\checkpoint-79000")
+model_id = "facebook/opt-1.3b"
+
+ADAPTER_PATH = Path(r"C:\Users\Sirius\Downloads\model-1\checkpoint-1400")
 BOT_TOKEN = "6449634010:AAFMpPNmy1NEyxa45oVfjSsY_D1fDZxgQmo"
 HIST_CLEAR = '/empty'
 
-model = Model(MODEL_PATH, use_gpu=1)
-print(type(model.model))
+model = Model(model_id, adapter=ADAPTER_PATH)
 
 # bert = Model("bert-large-uncased-whole-word-masking-finetuned-squad")
 class A:

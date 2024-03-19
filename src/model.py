@@ -3,18 +3,18 @@ from trl import SFTTrainer
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 import pathlib
 
-# ROLE_TOKENS = {
-#     'system': '[!]',
-#     'user':   '[>]',
-#     'web':    '[?]',
-#     'bot':    '[<]'
-# }
 ROLE_TOKENS = {
-    'system': '[SYS]',
-    'user':   '[USR]',
-    'web':    '[WEB]',
-    'bot':    '[BOT]'
+    'system': '[!]',
+    'user':   '[>]',
+    'web':    '[?]',
+    'bot':    '[<]'
 }
+# ROLE_TOKENS = {
+#     'system': '[SYS]',
+#     'user':   '[USR]',
+#     'web':    '[WEB]',
+#     'bot':    '[BOT]'
+# }
 
 TOKENS = {
     'eos_token': '[/]',
@@ -22,12 +22,16 @@ TOKENS = {
 }
 
 class Model:
-    def __init__(self, model, seq_len=512, use_gpu=1):
+    def __init__(self, model, seq_len=512, use_gpu=1, adapter=None):
         # if type(model) in [str, pathlib.Path]:
         self.tokenizer = AutoTokenizer.from_pretrained(model, device='cuda:0' if use_gpu else 'cpu')
         self.model = model
-        # if type(self.model) in [str, pathlib.WindowsPath]:
         self.model = AutoModelForCausalLM.from_pretrained(model)
+        if adapter:
+            self.tokenizer.add_special_tokens({**TOKENS, 'additional_special_tokens': list(ROLE_TOKENS.values())})
+            self.model.resize_token_embeddings(len(self.tokenizer))
+            self.model.load_adapter(adapter)
+        # if type(self.model) in [str, pathlib.WindowsPath]:
         self.seq_len = seq_len
         self.use_gpu = use_gpu
         if use_gpu:
