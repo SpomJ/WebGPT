@@ -20,4 +20,3 @@ python src/tg_bot_source.py
 Open telegram, go to `@WebGPTboBOT` and enter your prompt.
 
 
-# Profit 1!!
