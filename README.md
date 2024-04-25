@@ -1,5 +1,7 @@
 # WebGPT
 
+An innovative bot for human-like communication using the Internet. Thanks to Internet access, this GPT model can give an up-to-date answer to any of your questions.
+
 ## TG bot
 
 ### Installation
