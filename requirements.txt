@@ -6,3 +6,4 @@ html2text
 urllib
 bs4
 duckduckgo_search
+googlesearch
