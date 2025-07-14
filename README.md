@@ -5,7 +5,7 @@ An innovative bot for human-like communication using the Internet. Thanks to Int
 ## How it work
 ### Architecture of the neural network system:
 
-![architecture](images/architecture.jpg)
+![architecture](images/architecture.png)
 
 ## TG bot
 
